@@ -1,0 +1,43 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: python-test-app
+  namespace: python-test-namespace
+  labels:
+    k8s-app: python-test-app
+    project: python-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: python-test-app
+  template:
+    metadata:
+      name: python-test-app
+      labels:
+        k8s-app: python-test-app
+    spec:
+      containers:
+      - name: python-test-app
+        image: gitlabubuntu2.com:5050/gitlab-instance-32af17e0/test-py:{{CI_COMMIT_SHA}}
+        imagePullPolicy: IfNotPresent
+      imagePullSecrets:
+      - name: secret-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: python-test-app
+  namespace: python-test-namespace
+  labels:
+    k8s-app: python-test-app
+    project: python-test
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 5555
+    targetPort: 5555
+    nodePort: 30555
+  selector:
+    k8s-app: python-test-app

@@ -1,0 +1,3 @@
+ci_access:
+  projects:
+    - id: gitlab-instance-32af17e0/test-py

@@ -1,0 +1,25 @@
+stages:
+  - build
+  - deploy
+
+build_app:
+  stage: build
+  image:
+    name: docker:stable
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build . -t gitlabubuntu2.com:5050/gitlab-instance-32af17e0/test-py:$CI_COMMIT_SHA
+    - docker tag gitlabubuntu2.com:5050/gitlab-instance-32af17e0/test-py:$CI_COMMIT_SHA gitlabubuntu2.com:5050/gitlab-instance-32af17e0/test-py:latest
+    - docker push gitlabubuntu2.com:5050/gitlab-instance-32af17e0/test-py:$CI_COMMIT_SHA
+    - docker push gitlabubuntu2.com:5050/gitlab-instance-32af17e0/test-py:latest
+
+deploy_app:
+  stage: deploy
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  environment: production
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context gitlab-instance-32af17e0/test-py:agents-one
+    - cat kubernetes/app.yml | sed "s/{{CI_COMMIT_SHA}}/$CI_COMMIT_SHA/g" | kubectl apply --insecure-skip-tls-verify -f -
